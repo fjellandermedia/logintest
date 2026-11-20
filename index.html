@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <title>Logga in med Microsoft (PoC)</title>
 <button id="login">Logga in med Microsoft</button>
+<button id="logout" hidden>Logga ut</button>
 <p id="out"></p>
 
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.30.0/lib/msal-browser.min.js"></script>
@@ -23,6 +24,8 @@
         const c = account.idTokenClaims;
         document.getElementById("out").textContent =
           "Inloggad som: " + (c.email || c.preferred_username || account.username);
+        document.getElementById("login").hidden = true;
+        document.getElementById("logout").hidden = false;
       }
     })
     .catch(err => {
@@ -31,5 +34,8 @@
 
   document.getElementById("login").onclick = () =>
     app.loginRedirect({ scopes: ["openid", "profile", "email"] });
+
+  document.getElementById("logout").onclick = () =>
+    app.logoutRedirect({ postLogoutRedirectUri: location.origin + location.pathname });
 </script>
 </html>
