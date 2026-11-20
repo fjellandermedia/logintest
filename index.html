@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="sv">
+<meta charset="utf-8">
+<title>Logga in med Microsoft (PoC)</title>
+<button id="login">Logga in med Microsoft</button>
+<p id="out"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.30.0/lib/msal-browser.min.js"></script>
+<script>
+  const app = new msal.PublicClientApplication({
+    auth: {
+      clientId: "DITT-CLIENT-ID",                              // från app-registreringen i Entra
+      authority: "https://login.microsoftonline.com/common",  // eller /<tenant-id> för bara er skola
+      redirectUri: location.origin + location.pathname,
+    },
+  });
+
+  app.initialize()
+    .then(() => app.handleRedirectPromise())
+    .then(result => {
+      const account = result?.account ?? app.getAllAccounts()[0];
+      if (account) {
+        const c = account.idTokenClaims;
+        document.getElementById("out").textContent =
+          "Inloggad som: " + (c.email || c.preferred_username || account.username);
+      }
+    });
+
+  document.getElementById("login").onclick = () =>
+    app.loginRedirect({ scopes: ["openid", "profile", "email"] });
+</script>
+</html>
