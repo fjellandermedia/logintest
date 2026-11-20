@@ -4,7 +4,9 @@
 <title>Logga in med Microsoft (PoC)</title>
 <button id="login">Logga in med Microsoft</button>
 <button id="logout" hidden>Logga ut</button>
+<button id="me" hidden>Visa /me</button>
 <p id="out"></p>
+<pre id="meOut"></pre>
 
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.30.0/lib/msal-browser.min.js"></script>
 <script>
@@ -26,6 +28,7 @@
           "Inloggad som: " + (c.email || c.preferred_username || account.username);
         document.getElementById("login").hidden = true;
         document.getElementById("logout").hidden = false;
+        document.getElementById("me").hidden = false;
       }
     })
     .catch(err => {
@@ -33,9 +36,25 @@
     });
 
   document.getElementById("login").onclick = () =>
-    app.loginRedirect({ scopes: ["openid", "profile", "email"] });
+    app.loginRedirect({ scopes: ["openid", "profile", "email", "User.Read"] });
 
   document.getElementById("logout").onclick = () =>
     app.logoutRedirect({ postLogoutRedirectUri: location.origin + location.pathname });
+
+  // Hämtar en token för Microsoft Graph (User.Read) och visar svaret från /me
+  document.getElementById("me").onclick = async () => {
+    const out = document.getElementById("meOut");
+    const request = { scopes: ["User.Read"], account: app.getAllAccounts()[0] };
+    try {
+      const { accessToken } = await app.acquireTokenSilent(request);
+      const res = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: "Bearer " + accessToken },
+      });
+      out.textContent = JSON.stringify(await res.json(), null, 2);
+    } catch (err) {
+      if (err instanceof msal.InteractionRequiredAuthError) return app.acquireTokenRedirect(request);
+      out.textContent = "Fel: " + (err.errorCode || "") + " " + err.message;
+    }
+  };
 </script>
 </html>
