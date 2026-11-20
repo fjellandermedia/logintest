@@ -24,6 +24,9 @@
         document.getElementById("out").textContent =
           "Inloggad som: " + (c.email || c.preferred_username || account.username);
       }
+    })
+    .catch(err => {
+      document.getElementById("out").textContent = "Fel: " + (err.errorCode || "") + " " + err.message;
     });
 
   document.getElementById("login").onclick = () =>
